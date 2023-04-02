@@ -48,6 +48,14 @@
 		<h6><b>Mode 4</b> forthcoming</h6>
                 </h5>
                 <h5>
+                    Adjust the macrovectors up or down.
+                </h5>
+                <h6>
+                    Macrovectors can be adjusted from the minimal vector upwards (increasing the score) or down from the maximal vector within an equivalence class value</h6>
+                     <input type = "checkbox" id="adjust_down" @click="onClickAdjustDown()" checked=true> Down<br>
+                     <input type = "checkbox" id="adjust_up" @click="onClickAdjustUp()"> Up<br>
+                     
+                <h5>
                The scores above are "free" to change and to go beyond the lower levels. If you want them capped tick your preferred option.
                 <h6></h6>
 		        <input type = "checkbox" id="capped_qual_checkbox" @click="onClickCappedQualitative()"> Max Change Bounded to Qualitative Score<br>

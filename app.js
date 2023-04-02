@@ -24,6 +24,8 @@ const app = Vue.createApp({
             isCheckedMeanVariable: false,
             isCheckedMaxValue: false,
             isCheckedMinimal: true,
+            isClickAdjustDownn: true,
+            isClickAdjustUp: false,
             cvssMaxVector: null,
             max_base_value: 0.0,
             current_value: 0.0
@@ -268,6 +270,26 @@ const app = Vue.createApp({
                 this.isCheckedCappedQualitative = false
                 document.getElementById('capped_qual_checkbox').checked = false;
 
+            }
+        },
+        onClickAdjustDown() {
+            this.isClickAdjustDown = document.getElementById('adjust_down').checked
+            if (this.isClickAdjustDown){
+                document.getElementById('adjust_up').checked = false;
+                this.isClickAdjustUp = false;
+            } else {
+                document.getElementById('adjust_up').checked = true;
+                this.isClickAdjustUp = true;
+            }
+        },
+        onClickAdjustUp() {
+            this.isClickAdjustUp = document.getElementById('adjust_up').checked
+            if (this.isClickAdjustUp){
+                document.getElementById('adjust_down').checked = false;
+                this.isClickAdjustDown = false;
+            } else {
+                document.getElementById('adjust_down').checked = true;
+                this.isClickAdjustDown = true;
             }
         },
         onClickCappedQualitative() {
@@ -535,6 +557,9 @@ const app = Vue.createApp({
             //compute next lower macro, it can also not exist
             eq1_next_lower_macro = "".concat(eq1_val+1,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val)
             eq2_next_lower_macro = "".concat(eq1_val,eq2_val+1,eq3_val,eq4_val,eq5_val,eq6_val)
+
+            eq1_next_higher_macro = "".concat(eq1_val-1,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val)
+            eq2_next_higher_macro = "".concat(eq1_val,eq2_val-1,eq3_val,eq4_val,eq5_val,eq6_val)
             
             //eq3 and eq6 are related
             if (eq3==1 && eq6==1){
@@ -564,9 +589,44 @@ const app = Vue.createApp({
             eq4_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val+1,eq5_val,eq6_val)
             eq5_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val+1,eq6_val)
 
+            if (eq3==0 && eq6==0){
+                //00 --> does not exist
+                eq3eq6_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val-1,eq4_val,eq5_val,eq6_val-1)
+            }
+            else if (eq3==0 && eq6==1){
+                //01 --> 00
+                eq3eq6_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val-1) 
+            }
+            else if (eq3==1 && eq6==0){
+                //10 --> 00
+                eq3eq6_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val-1,eq4_val,eq5_val,eq6_val) 
+            }
+            else if (eq3==1 && eq6==1){
+                //11 --> 10
+                //11 --> 01
+                eq3eq6_next_higher_macro_left = "".concat(eq1_val,eq2_val,eq3_val-1,eq4_val,eq5_val,eq6_val) 
+                eq3eq6_next_higher_macro_right = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val-1) 
+            }
+            else if (eq3==2 && eq6==0){
+                //20 does not exist so we'll set it so it gets us nonsense
+                eq3eq6_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val-1,eq4_val,eq5_val,eq6_val-1) 
+            }
+            else if (eq3==2 && eq6==1){
+                //21 --> 11 has to go to 11 as 20 doesn't exist
+                eq3eq6_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val-1,eq4_val,eq5_val,eq6_val) 
+            }
+
+            eq4_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val-1,eq5_val,eq6_val)
+            eq5_next_higher_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val-1,eq6_val)
+
             //get their score, if the next lower macro score do not exist the result is NaN
             score_eq1_next_lower_macro = this.cvssLookupData[eq1_next_lower_macro]
             score_eq2_next_lower_macro = this.cvssLookupData[eq2_next_lower_macro]
+
+            score_eq1_next_higher_macro = this.cvssLookupData[eq1_next_higher_macro]
+            score_eq2_next_higher_macro = this.cvssLookupData[eq2_next_higher_macro]
+
+
             if (eq3==0 && eq6==0){
                 //multiple path take the one with higher score
                 score_eq3eq6_next_lower_macro_left = this.cvssLookupData[eq3eq6_next_lower_macro_left]
@@ -582,8 +642,29 @@ const app = Vue.createApp({
             else{
                 score_eq3eq6_next_lower_macro = this.cvssLookupData[eq3eq6_next_lower_macro]
             }
+
+            if (eq3==1 && eq6==1){
+                //multiple path take the one with higher score
+                score_eq3eq6_next_higher_macro_left = this.cvssLookupData[eq3eq6_next_higher_macro_left]
+                score_eq3eq6_next_higher_macro_right = this.cvssLookupData[eq3eq6_next_higher_macro_right]
+
+                if (score_eq3eq6_next_higher_macro_left>score_eq3eq6_next_higher_macro_right){
+                    score_eq3eq6_next_higher_macro = score_eq3eq6_next_higher_macro_left
+                }
+                else{
+                    score_eq3eq6_next_higher_macro = score_eq3eq6_next_higher_macro_right
+                }
+            }
+            else{
+                score_eq3eq6_next_higher_macro = this.cvssLookupData[eq3eq6_next_higher_macro]
+            }
+
+
             score_eq4_next_lower_macro = this.cvssLookupData[eq4_next_lower_macro]
             score_eq5_next_lower_macro = this.cvssLookupData[eq5_next_lower_macro]
+
+            score_eq4_higher_lower_macro = this.cvssLookupData[eq4_next_lower_macro]
+            score_eq5_higher_lower_macro = this.cvssLookupData[eq5_next_lower_macro]
 
             //get all max vector for the eq
             eq1_maxes = this.getvalueEqLookup(lookup,0)
@@ -668,11 +749,19 @@ const app = Vue.createApp({
             //console.log(max_vector)
 
             //if the next lower macro score do not exist the result is Nan
-            available_distance_eq1 = value - score_eq1_next_lower_macro
-            available_distance_eq2 = value - score_eq2_next_lower_macro
-            available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
-            available_distance_eq4 = value - score_eq4_next_lower_macro
-            available_distance_eq5 = value - score_eq5_next_lower_macro
+            if (this.isCheckedAdjustDown) {
+                available_distance_eq1 = value - score_eq1_next_lower_macro
+                available_distance_eq2 = value - score_eq2_next_lower_macro
+                available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
+                available_distance_eq4 = value - score_eq4_next_lower_macro
+                available_distance_eq5 = value - score_eq5_next_lower_macro
+            } else {
+                available_distance_eq1 = value - score_eq1_next_higher
+                available_distance_eq2 = value - score_eq2_next_higher_macro
+                available_distance_eq3eq6 = value - score_eq3eq6_next_higher_macro
+                available_distance_eq4 = value - score_eq4_next_higher_macro
+                available_distance_eq5 = value - score_eq5_next_higher_macro
+            }
 
             current_hamming_distance_eq1 = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI
             current_hamming_distance_eq2 = hamming_distance_AC + hamming_distance_AT
