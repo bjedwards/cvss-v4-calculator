@@ -1,13 +1,20 @@
+/**
+ * Forked from https://github.com/RedHatProductSecurity/cvss-v4-calculator
+ * @author Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento)
+ */
+
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-        <title>CVSS v4.0 calculator – DRAFT</title>
+        <title>CVSS v4.0 calculator</title>
         <script src="https://unpkg.com/vue@3.2.45/dist/vue.global.prod.js"></script>
         <script src="cvss_config.js?v=2"></script>
         <script src="cvss_details.js?v=1"></script>
         <script src="cvss_lookup.js?v=5"></script>
+        <script src="max_composed.js"></script>
+        <script src="max_hamming.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/spectre.css@0.5.9/dist/spectre.min.css">
         <link rel="stylesheet" href="https://unpkg.com/spectre.css@0.5.9/dist/spectre-exp.min.css">
         <link rel="stylesheet" href="https://unpkg.com/spectre.css@0.5.9/dist/spectre-icons.min.css">
@@ -18,10 +25,34 @@
         <div id="app" class="container">
             <div id="header">
                 <h4>CVSS v4.0 calculator – DRAFT</h4>
-                <mark class="tooltip c-hand" data-tooltip="Click vector to copy to clipboard" @click="copyVector">
-                    {{ vector }}
-                </mark>
-                <button class="btn btn-sm ml-2" @click="onReset()">Reset</button>
+                <h5> Look and feel from <A HREF="https://redhatproductsecurity.github.io/cvss-v4-calculator">Redhat</A>. Source code <A HREF="https://github.com/assuremoss/assuremoss.github.io/tree/main/CVSSv4Calculator">here</A> </h5>
+                Current Vector,Score:
+                <mark class="tooltip c-hand" data-tooltip="Click vector to copy to clipboard" @click="copyVectorCurrent">
+                    {{ vector }},{{ baseScore }}
+                </mark><button class="btn btn-sm ml-2" @click="onReset()">Reset</button>
+                <br>
+                Highest Severity Vector,Score: 
+                <mark class="tooltip c-hand" data-tooltip="Click vector to copy to clipboard" @click="copyVectorMax">
+                    CVSS:4.0/{{ cvssMaxVector }},{{ MaxBaseScore }}
+                </mark><br>
+                Macro vector: {{ macroVector }}<br>
+                <h5>
+                Modes
+                <h6>
+                <input type = "checkbox" id="max_checkbox" @click="onClickMaxValue()"> <b>Mode 0</b>: Raw Elo Score of Macro Vector<br>
+	           <input type = "checkbox" id="minimal_checkbox" @click="onClickMinimal()" checked=true> <b>Mode 2</b>: Minimal Change (0.1 * Hamming Distance)<br>
+                <input type = "checkbox" id="mean_checkbox" @click="onClickMean()"> <b>Mode 3</b>: Mean Progress Towards Lower Macro Vector(s) (Mean Proportional Hamming Distance)<br>
+                <input type = "checkbox" id="weighted_checkbox" @click="onClickWeighted()"> <b>Mode 5</b>: Variable Change (Weighted Hamming Distance)<br>
+                <input type = "checkbox" id="mean_variable_checkbox" @click="onClickMeanVariable()"> <b>Mode 6</b>: Variable Mean Progress Towards Lower Macro Vector(s) (Mean Proportional Weighted Hamming Distance)<br>
+                </h6>
+		<h6><b>Mode 4</b> forthcoming</h6>
+                </h5>
+                <h5>
+               The scores above are "free" to change and to go beyond the lower levels. If you want them capped tick your preferred option.
+                <h6></h6>
+		        <input type = "checkbox" id="capped_qual_checkbox" @click="onClickCappedQualitative()"> Max Change Bounded to Qualitative Score<br>
+                <input type = "checkbox" id="capped_macro_checkbox" @click="onClickCappedMacro()"> Max Change Bounded to MacroVector<br>
+                </h5>
                 <h5>
                     <span class="tooltip tooltip-bottom c-hand"
                           :data-tooltip="showDetails ? 'Hide details' : 'Show details'"
@@ -33,7 +64,6 @@
                     </span>
                 </h5>
                 <blockquote v-if="showDetails">
-                    <sup class="mb-2"><i>Macro vector: {{ macroVector }}</i></sup>
                     <div v-for="(index, description) in cvssMacroVectorDetailsData">
                         {{ description }}: {{ cvssMacroVectorValuesData[macroVector[index]] }}
                     </div>

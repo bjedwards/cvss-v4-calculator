@@ -2,120 +2,21 @@
  * Forked from https://github.com/RedHatProductSecurity/cvss-v4-calculator
  * BaseScore algorithm from Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento)
  * Data for the Weighted Hamming Distance by Ben Edwards (Cyenthia)
+ 
+ * CONTAINS SOME REFACTORING IDEAS TO BE ADDED
+ 
+ 
  */
 
 const app = Vue.createApp({
     data() {
         return {
-            cvssConfigData: cvssConfig,
-            cvssLookupData: cvssLookup,
-            maxComposedData: maxComposed,
-            maxHammingData: maxHamming,
-            maxHammingVariableData: maxHammingVariable,
-            cvssMacroVectorDetailsData: cvssMacroVectorDetails,
-            cvssMacroVectorValuesData: cvssMacroVectorValues,
-            showDetails: false,
-            cvssSelected: null,
-            header_height: 0,
-            isCheckedCappedQualitative: false,
-            isCheckedCappedMacro: false,
-            isCheckedWeighted: false,
-            isCheckedMean: false,
-            isCheckedMeanVariable: false,
-            isCheckedMaxValue: false,
-            isCheckedMinimal: true,
-            cvssMaxVector: null,
-            max_base_value: 0.0,
-            current_value: 0.0
+...
         }
     },
     methods: {
-        getvalueEqLookup(lookup,i){ 
-            eq=parseInt(lookup[i])
-            eq_val = maxComposed["eq"+String(i+1)][eq]
-            return eq_val
-        },
-        getQualScore(score){
-            if(score == 0) {
-                return "None"
-            }
-            else if(score < 4.0) {
-                return "Low"
-            }
-            else if(score < 7.0) {
-                return "Medium"
-            }
-            else if(score < 9.0) {
-                return "High"
-            }
-            else {
-                return "Critical"
-            }
-        },
-        extractValueMetric(metric,str){
-            //indexOf gives first index of the metric, we then need to go over its size
-            extracted = str.slice(str.indexOf(metric) + metric.length + 1)
-            //remove what follow
-            if(extracted.indexOf('/')>0) {
-                metric_val = extracted.substring(0, extracted.indexOf('/'));
-            }
-            else{
-                //case where it is the last metric so no ending /
-                metric_val = extracted
-            }
-            return metric_val
-        },
-        buttonClass(isPrimary, big=false) {
-            result = "btn btn-m"
-            if(isPrimary) {
-                result += " btn-primary"
-            }
-            if(!big) {
-                result += " btn-sm"
-            }
-
-            return result
-        },
-        baseScoreClass(qualScore) {
-            if(qualScore == "Low") {
-                return "c-hand text-success"
-            }
-            else if(qualScore == "Medium") {
-                return "c-hand text-warning"
-            }
-            else if(qualScore == "High") {
-                return "c-hand text-error"
-            }
-            else if(qualScore == "Critical") {
-                return "c-hand text-error text-bold"
-            }
-            else {
-                return "c-hand text-gray"
-            }
-        },
-        copyVectorCurrent() {
-            navigator.clipboard.writeText(this.vector+','+this.current_value)
-            window.location.hash = this.vector
-        },
-        copyVectorMax() {
-            navigator.clipboard.writeText(this.vector+','+this.max_base_value)
-            window.location.hash = this.vector
-        },
-        onButton(metric, value) {
-            this.cvssSelected[metric] = value
-            window.location.hash = this.vector
-        },
-        setButtonsToVector(vector) {
-            this.resetSelected()
-            metrics = vector.split("/")
-            for(index in metrics) {
-                [key, value] = metrics[index].split(":")
-                if(key in this.cvssSelected) {
-                    this.cvssSelected[key] = value
-                }
-            }
-        },
-        m(metric) {
+...
+       m(metric) {
             selected = this.cvssSelected[metric]
 
             // E:X is the same as E:A
@@ -148,177 +49,8 @@ const app = Vue.createApp({
 
             return selected
         },
-        onReset() {
-            window.location.hash = ""
-            this.cvssMaxVector = null
-        },
-        onClickWeighted() {
-            this.isCheckedWeighted = document.getElementById('weighted_checkbox').checked
-            if (this.isCheckedWeighted){
-                //if true disable mean mode and checkbox
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-                this.isCheckedMaxValue = false
-                document.getElementById('max_checkbox').checked = false;
-
-                this.isCheckedMinimal = false
-                document.getElementById('minimal_checkbox').checked = false;
-   
-            }
-        },
-        onClickMeanVariable() {
-            this.isCheckedMeanVariable = document.getElementById('mean_variable_checkbox').checked
-            if (this.isCheckedMeanVariable){
-                //if true disable mean mode and checkbox
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-                this.isCheckedWeighted = false
-                document.getElementById('weighted_checkbox').checked = false;
-
-                this.isCheckedMaxValue = false
-                document.getElementById('max_checkbox').checked = false;
-
-                this.isCheckedCappedMacro = false
-                document.getElementById('capped_macro_checkbox').checked = false;
-
-                this.isCheckedCappedQualitative = false
-                document.getElementById('capped_qual_checkbox').checked = false;
-
-                this.isCheckedMinimal = false
-                document.getElementById('minimal_checkbox').checked = false;
-
-            }
-        },
-        onClickMean() {
-            this.isCheckedMean = document.getElementById('mean_checkbox').checked
-            if (this.isCheckedMean){
-                //if true disable mean mode and checkbox
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedWeighted = false
-                document.getElementById('weighted_checkbox').checked = false;
-
-                this.isCheckedMaxValue = false
-                document.getElementById('max_checkbox').checked = false;
-
-
-                this.isCheckedCappedMacro = false
-                document.getElementById('capped_macro_checkbox').checked = false;
-
-                this.isCheckedCappedQualitative = false
-                document.getElementById('capped_qual_checkbox').checked = false;
-
-
-                this.isCheckedMinimal = false
-                document.getElementById('minimal_checkbox').checked = false;
-
-            }
-        },
-        onClickMinimal(){
-            this.isCheckedMinimal = document.getElementById('minimal_checkbox').checked
-
-            if (this.isCheckedMinimal){
-                //if true disable mean mode and checkbox
-
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedWeighted = false
-                document.getElementById('weighted_checkbox').checked = false;
-
-                this.isCheckedMaxValue = false
-                document.getElementById('max_checkbox').checked = false;   
-
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-                this.isCheckedCappedMacro = false
-                document.getElementById('capped_macro_checkbox').checked = false;
-
-                this.isCheckedCappedQualitative = false
-                document.getElementById('capped_qual_checkbox').checked = false;
-            }
-        },
-        onClickMaxValue(){
-            this.isCheckedMaxValue = document.getElementById('max_checkbox').checked
-            if (this.isCheckedMaxValue){
-                //disable other
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedWeighted = false
-                document.getElementById('weighted_checkbox').checked = false;
-
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-
-                this.isCheckedMinimal = false
-                document.getElementById('minimal_checkbox').checked = false;
-
-                this.isCheckedCappedMacro = false
-                document.getElementById('capped_macro_checkbox').checked = false;
-
-                this.isCheckedCappedQualitative = false
-                document.getElementById('capped_qual_checkbox').checked = false;
-
-            }
-        },
-        onClickCappedQualitative() {
-            this.isCheckedCappedQualitative = document.getElementById('capped_qual_checkbox').checked
-            if (this.isCheckedCappedQualitative){
-                //if true disable mean mode and checkbox
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-                this.isCheckedCappedMacro = false
-                document.getElementById('capped_macro_checkbox').checked = false;
-            }
-        },
-        onClickCappedMacro() {
-            this.isCheckedCappedMacro = document.getElementById('capped_macro_checkbox').checked
-            if (this.isCheckedCappedMacro){
-                //if true disable mean mode and checkbox
-                this.isCheckedMeanVariable = false
-                document.getElementById('mean_variable_checkbox').checked = false;
-
-                this.isCheckedMean = false
-                document.getElementById('mean_checkbox').checked = false;
-
-                this.isCheckedCappedQualitative = false
-                document.getElementById('capped_qual_checkbox').checked = false;
-            }
-        },
-        resetSelected() {
-            this.cvssSelected = {}
-            for([metricType, metricTypeData] of Object.entries(this.cvssConfigData)) {
-                for([metricGroup, metricGroupData] of Object.entries(metricTypeData.metric_groups)) {
-                    for([metric, metricData] of Object.entries(metricGroupData)) {
-                        this.cvssSelected[metricData.short] = metricData.selected
-                    }
-                }
-            }
-        },
-        splitObjectEntries(object, chunkSize) {
-            arr = Object.entries(object)
-            res = [];
-            for(let i = 0; i < arr.length; i += chunkSize) {
-                chunk = arr.slice(i, i + chunkSize)
-                res.push(chunk)
-            }
-            return res
-        }
-    },
-    computed: {
+ ...
+ computed: {
         vector() {
             value = "CVSS:4.0"
             for(metric in this.cvssSelected) {
@@ -462,10 +194,128 @@ const app = Vue.createApp({
 
             return eq1 + eq2 + eq3 + eq4 + eq5 +eq6
         },
+		TotalHammingDistance(upper_vector,lower_vector){
+                hamming_distance_AV = AV_levels[lower_vector("AV")]-AV_levels[this.extractValueMetric("AV",upper_vector)]
+                hamming_distance_PR = PR_levels[lower_vector("PR")]-PR_levels[this.extractValueMetric("PR",upper_vector)]
+                hamming_distance_UI = UI_levels[lower_vector("UI")]-UI_levels[this.extractValueMetric("UI",upper_vector)]
+
+                hamming_distance_AC = AC_levels[lower_vector("AC")]-AC_levels[this.extractValueMetric("AC",upper_vector)]
+                hamming_distance_AT = AT_levels[lower_vector("AT")]-AT_levels[this.extractValueMetric("AT",upper_vector)]
+
+                hamming_distance_VC = VC_levels[lower_vector("VC")]-VC_levels[this.extractValueMetric("VC",upper_vector)]
+                hamming_distance_VI = VI_levels[lower_vector("VI")]-VI_levels[this.extractValueMetric("VI",upper_vector)]
+                hamming_distance_VA = VA_levels[lower_vector("VA")]-VA_levels[this.extractValueMetric("VA",upper_vector)]   
+
+
+                if(lower_vector("MSI") == "S" && lower_vector("MSA")=="S"){
+                    //use MSI and MSA
+                    hamming_distance_SI = SI_levels[lower_vector("MSI")]-SI_levels[this.extractValueMetric("SI",upper_vector)]             
+                    hamming_distance_SA = SA_levels[lower_vector("MSA")]-SA_levels[this.extractValueMetric("SA",upper_vector)]  
+                }
+                else if (lower_vector("MSI") == "S"){
+                    //only MSI set to S
+                    hamming_distance_SI = SI_levels[lower_vector("MSI")]-SI_levels[this.extractValueMetric("SI",upper_vector)]
+                    hamming_distance_SA = SA_levels[lower_vector("SA")]-SA_levels[this.extractValueMetric("SA",upper_vector)]
+                }
+                else if(lower_vector("MSA") == "S"){
+                    //only MSA set to S
+                    hamming_distance_SI = SI_levels[lower_vector("SI")]-SI_levels[this.extractValueMetric("SI",upper_vector)]
+                    hamming_distance_SA = SA_levels[lower_vector("MSA")]-SA_levels[this.extractValueMetric("SA",upper_vector] 
+                }
+                else {
+                    //none set to S
+                    hamming_distance_SI = SI_levels[lower_vector("SI")]-SI_levels[this.extractValueMetric("SI",upper_vector)]     
+                    hamming_distance_SA = SA_levels[lower_vector("SA")]-SA_levels[this.extractValueMetric("SA",upper_vector)]  
+                }
+                hamming_distance_SC = SC_levels[lower_vector("SC")]-SC_levels[this.extractValueMetric("SC",upper_vector)]
+
+                hamming_distance_CR = CR_levels[lower_vector("CR")]-CR_levels[this.extractValueMetric("CR",upper_vector)]
+                hamming_distance_IR = IR_levels[lower_vector("IR")]-IR_levels[this.extractValueMetric("IR",upper_vector)]
+                hamming_distance_AR = AR_levels[lower_vector("AR")]-AR_levels[this.extractValueMetric("AR",upper_vector)]
+				
+				return hamming_distance_AV + hamming_distance_PR + hamming_distance_UI + hamming_distance_AC + hamming_distance_AT + hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_SC  + hamming_distance_SI +  hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
+		},
+		HigherVectors(lookupMacroVector) {
+            //get all max vector for the eq
+            eq1_maxes = this.getvalueEqLookup(lookupMacroVector,0)
+            eq2_maxes = this.getvalueEqLookup(lookupMacroVector,1)
+            eq3_eq6_maxes = this.getvalueEqLookup(lookupMacroVector,2)[lookupMacroVector[5]]
+            eq4_maxes = this.getvalueEqLookup(lookupMacroVector,3)
+            eq5_maxes = this.getvalueEqLookup(lookupMacroVector,4)
+
+            //compose them
+            max_vectors = []
+            for (eq1_max of eq1_maxes){
+                for (eq2_max of eq2_maxes){
+                    for (eq3_eq6_max of eq3_eq6_maxes){
+                        for (eq4_max of eq4_maxes){
+                            for (eq5max of eq5_maxes){
+                                    max_vectors.push(eq1_max+eq2_max+eq3_eq6_max+eq4_max+eq5max)
+                            }
+                        }
+                    }
+                }
+            }
+			return max_vectors
+		},
+		LowerVectors(lookupMacroVector) {
+            eq1_val = parseInt(lookupMacroVector[0])
+            eq2_val = parseInt(lookupMacroVector[1])
+            eq3_val = parseInt(lookupMacroVector[2])
+            eq4_val = parseInt(lookupMacroVector[3])
+            eq5_val = parseInt(lookupMacroVector[4])
+            eq6_val = parseInt(lookupMacroVector[5])
+
+			min_vectors = []
+			
+            //compute next lower macro, it can also not exist
+            eq1_next_lower_macro = "".concat(eq1_val+1,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val)
+			min_vectors.push(this.HigherVectors(eq1_next_lower_macro))
+			
+            eq2_next_lower_macro = "".concat(eq1_val,eq2_val+1,eq3_val,eq4_val,eq5_val,eq6_val)
+			min_vectors.push(this.HigherVectors(eq2_next_lower_macro))
+            
+            //eq3 and eq6 are related
+            if (eq3==1 && eq6==1){
+                //11 --> 21
+                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val)
+				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro))
+           }
+            else if (eq3==0 && eq6==1){
+                //01 --> 11
+                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val) 
+ 				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro))
+            }
+            else if (eq3==1 && eq6==0){
+                //10 --> 11
+                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val+1) 
+ 				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro))
+            }
+            else if (eq3==0 && eq6==0){
+                //00 --> 01
+                //00 --> 10
+                eq3eq6_next_lower_macro_left = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val+1)
+                eq3eq6_next_lower_macro_right = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val)
+ 				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro_left))
+ 				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro_right))
+            }
+            else{
+                //21 --> 32 (do not exist)
+                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val+1)
+				min_vectors.push(this.HigherVectors(eq3eq6_next_lower_macro))
+             }
+
+
+            eq4_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val+1,eq5_val,eq6_val)
+			min_vectors.push(this.HigherVectors(eq4_next_lower_macro))
+            eq5_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val+1,eq6_val)
+			min_vectors.push(this.HigherVectors(eq4_next_lower_macro))
+			
+			return min_vectors
+ 		},
         baseScore() {
             this.cvssMaxVector = null
-            if((this.isCheckedWeighted || this.isCheckedMeanVariable) && !(this.isCheckedMean) && !(this.isCheckedMinimal)){
-                //console.log("Variable values")
+            if(this.isCheckedWeighted){
                 AV_levels={"P": 2.0619,"L": 1.3112,"A": 0.5254,"N": 0}
                 PR_levels={"H": 0.4821,"L": 0.1504,"N": 0}
                 UI_levels={"A": 0.3296,"P": 0.194,"N": 0}
@@ -512,7 +362,8 @@ const app = Vue.createApp({
 
             }
 
-            lookup = this.macroVector
+			lookup = this.macroVector
+			
             // Exception for no impact on system
             if(lookup.includes("33")) {
                 return "0.0"
@@ -525,87 +376,11 @@ const app = Vue.createApp({
 
             qual_value_macrovector = this.getQualScore(value)
 
-            eq1_val = parseInt(lookup[0])
-            eq2_val = parseInt(lookup[1])
-            eq3_val = parseInt(lookup[2])
-            eq4_val = parseInt(lookup[3])
-            eq5_val = parseInt(lookup[4])
-            eq6_val = parseInt(lookup[5])
-
-            //compute next lower macro, it can also not exist
-            eq1_next_lower_macro = "".concat(eq1_val+1,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val)
-            eq2_next_lower_macro = "".concat(eq1_val,eq2_val+1,eq3_val,eq4_val,eq5_val,eq6_val)
-            
-            //eq3 and eq6 are related
-            if (eq3==1 && eq6==1){
-                //11 --> 21
-                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val)
-            }
-            else if (eq3==0 && eq6==1){
-                //01 --> 11
-                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val) 
-            }
-            else if (eq3==1 && eq6==0){
-                //10 --> 11
-                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val+1) 
-            }
-            else if (eq3==0 && eq6==0){
-                //00 --> 01
-                //00 --> 10
-                eq3eq6_next_lower_macro_left = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val,eq6_val+1)
-                eq3eq6_next_lower_macro_right = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val)
-            }
-            else{
-                //21 --> 32 (do not exist)
-                eq3eq6_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val+1,eq4_val,eq5_val,eq6_val+1)
-            }
-
-
-            eq4_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val+1,eq5_val,eq6_val)
-            eq5_next_lower_macro = "".concat(eq1_val,eq2_val,eq3_val,eq4_val,eq5_val+1,eq6_val)
-
-            //get their score, if the next lower macro score do not exist the result is NaN
-            score_eq1_next_lower_macro = this.cvssLookupData[eq1_next_lower_macro]
-            score_eq2_next_lower_macro = this.cvssLookupData[eq2_next_lower_macro]
-            if (eq3==0 && eq6==0){
-                //multiple path take the one with higher score
-                score_eq3eq6_next_lower_macro_left = this.cvssLookupData[eq3eq6_next_lower_macro_left]
-                score_eq3eq6_next_lower_macro_right = this.cvssLookupData[eq3eq6_next_lower_macro_right]
-
-                if (score_eq3eq6_next_lower_macro_left>score_eq3eq6_next_lower_macro_right){
-                    score_eq3eq6_next_lower_macro = score_eq3eq6_next_lower_macro_left
-                }
-                else{
-                    score_eq3eq6_next_lower_macro = score_eq3eq6_next_lower_macro_right
-                }
-            }
-            else{
-                score_eq3eq6_next_lower_macro = this.cvssLookupData[eq3eq6_next_lower_macro]
-            }
-            score_eq4_next_lower_macro = this.cvssLookupData[eq4_next_lower_macro]
-            score_eq5_next_lower_macro = this.cvssLookupData[eq5_next_lower_macro]
-
-            //get all max vector for the eq
-            eq1_maxes = this.getvalueEqLookup(lookup,0)
-            eq2_maxes = this.getvalueEqLookup(lookup,1)
-            eq3_eq6_maxes = this.getvalueEqLookup(lookup,2)[lookup[5]]
-            eq4_maxes = this.getvalueEqLookup(lookup,3)
-            eq5_maxes = this.getvalueEqLookup(lookup,4)
-
-            //compose them
-            max_vectors = []
-            for (eq1_max of eq1_maxes){
-                for (eq2_max of eq2_maxes){
-                    for (eq3_eq6_max of eq3_eq6_maxes){
-                        for (eq4_max of eq4_maxes){
-                            for (eq5max of eq5_maxes){
-                                    max_vectors.push(eq1_max+eq2_max+eq3_eq6_max+eq4_max+eq5max)
-                            }
-                        }
-                    }
-                }
-            }
-
+            // THIS PART COMPUTE UPPER VECTOR AND LOWER BOUND VECTORS
+			
+            max_vectors = this.HigherVectors(lookup)
+			min_vectors = this.LowerVectors(lookup)
+			
             if (max_vectors==undefined){
                 alert("Currently disabled")
                 return "0.0"
@@ -665,25 +440,78 @@ const app = Vue.createApp({
                     break
                 }
             }
-            //console.log(max_vector)
 
-            //if the next lower macro score do not exist the result is Nan
-            available_distance_eq1 = value - score_eq1_next_lower_macro
-            available_distance_eq2 = value - score_eq2_next_lower_macro
-            available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
-            available_distance_eq4 = value - score_eq4_next_lower_macro
-            available_distance_eq5 = value - score_eq5_next_lower_macro
+			all_min_vectors = []
+            for (let i = 0; i < min_vectors_vectors.length; i++) {
+                tmp_vector = min_vectors[i]
+               //cannot have a positive distance if less than min
+                hamming_distance_AV = AV_levels[this.m("AV")]-AV_levels[this.extractValueMetric("AV",tmp_vector)]
+                hamming_distance_PR = PR_levels[this.m("PR")]-PR_levels[this.extractValueMetric("PR",tmp_vector)]
+                hamming_distance_UI = UI_levels[this.m("UI")]-UI_levels[this.extractValueMetric("UI",tmp_vector)]
 
-            current_hamming_distance_eq1 = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI
-            current_hamming_distance_eq2 = hamming_distance_AC + hamming_distance_AT
-            current_hamming_distance_eq3eq6 = hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
-            current_hamming_distance_eq4 = hamming_distance_SC + hamming_distance_SI + hamming_distance_SA
+                hamming_distance_AC = AC_levels[this.m("AC")]-AC_levels[this.extractValueMetric("AC",tmp_vector)]
+                hamming_distance_AT = AT_levels[this.m("AT")]-AT_levels[this.extractValueMetric("AT",tmp_vector)]
 
-            if(!this.isCheckedMean && !this.isCheckedMeanVariable){
-                //setting capped to macrovector
-                if(this.isCheckedCappedMacro){
+                hamming_distance_VC = VC_levels[this.m("VC")]-VC_levels[this.extractValueMetric("VC",tmp_vector)]
+                hamming_distance_VI = VI_levels[this.m("VI")]-VI_levels[this.extractValueMetric("VI",tmp_vector)]
+                hamming_distance_VA = VA_levels[this.m("VA")]-VA_levels[this.extractValueMetric("VA",tmp_vector)]   
 
-                    sum_hamming_distance = 0
+
+                if(this.m("MSI") == "S" && this.m("MSA")=="S"){
+                    //use MSI and MSA
+                    hamming_distance_SI = SI_levels[this.m("MSI")]-SI_levels[this.extractValueMetric("SI",tmp_vector)]             
+                    hamming_distance_SA = SA_levels[this.m("MSA")]-SA_levels[this.extractValueMetric("SA",tmp_vector)]  
+                }
+                else if (this.m("MSI") == "S"){
+                    //only MSI set to S
+                    hamming_distance_SI = SI_levels[this.m("MSI")]-SI_levels[this.extractValueMetric("SI",tmp_vector)]
+                    hamming_distance_SA = SA_levels[this.m("SA")]-SA_levels[this.extractValueMetric("SA",tmp_vector)]
+                }
+                else if(this.m("MSA") == "S"){
+                    //only MSA set to S
+                    hamming_distance_SI = SI_levels[this.m("SI")]-SI_levels[this.extractValueMetric("SI",tmp_vector)]
+                    hamming_distance_SA = SA_levels[this.m("MSA")]-SA_levels[this.extractValueMetric("SA",tmp_vector)] 
+                }
+                else {
+                    //none set to S
+                    hamming_distance_SI = SI_levels[this.m("SI")]-SI_levels[this.extractValueMetric("SI",tmp_vector)]     
+                    hamming_distance_SA = SA_levels[this.m("SA")]-SA_levels[this.extractValueMetric("SA",tmp_vector)]  
+                }
+                hamming_distance_SC = SC_levels[this.m("SC")]-SC_levels[this.extractValueMetric("SC",tmp_vector)]
+
+                hamming_distance_CR = CR_levels[this.m("CR")]-CR_levels[this.extractValueMetric("CR",tmp_vector)]
+                hamming_distance_IR = IR_levels[this.m("IR")]-IR_levels[this.extractValueMetric("IR",tmp_vector)]
+                hamming_distance_AR = AR_levels[this.m("AR")]-AR_levels[this.extractValueMetric("AR",tmp_vector)]
+
+
+                //if any is greater than zero this is not the right min
+                if (hamming_distance_AV>0 || hamming_distance_PR>0 || hamming_distance_UI>0 || hamming_distance_AC>0 || hamming_distance_AT>0 || hamming_distance_VC>0 || hamming_distance_VI>0 || hamming_distance_VA>0 || hamming_distance_SC>0 || hamming_distance_SI>0 || hamming_distance_SA>0 || hamming_distance_CR>0 || hamming_distance_IR>0 || hamming_distance_AR>0) {
+                    continue
+                }
+                else{
+                    //A correct min is found
+                    all_min_vectors.push(tmp_vector)
+                }
+			
+			
+			// THIS PART TO BE USED FOR MEAN/MAX CALCULATION
+			sum_distance = 0;
+			for (let i = 0; i < all_min_vectors.length; i++) {
+                tmp_vector = min_vectors[i]
+				lower_value = this.cvssLookupData[tmp_vector]
+				available_distance = this.TotalHammingDistance(max_vector,tmp_vector)
+				if (value -  > 0)
+					current_distance = this.TotalHammingDistance(max_vector,this.m)	
+					sum_distance += value - current_distance/available_distance*(value-lower_value)
+			}
+			mean_distance = sum_distance/all_min_vectors.length
+			
+			// THIS PART STILL REQUIRES REFACTORING 
+				if(!this.isCheckedMean){
+					//setting capped to macrovector
+					if(this.isCheckedCappedMacro){
+
+						sum_hamming_distance = 0
                     //consider each eq and its lower macro
                     //no need for EQ5 as hamming is always 0
 
@@ -725,7 +553,6 @@ const app = Vue.createApp({
                 value = parseFloat(value) - parseFloat(sum_hamming_distance)
             }
             else{
-                //console.log("MEAN SECTION")
                 step = 0.1
                 // mode 3: mean decrement among EQ sets
 
@@ -738,77 +565,40 @@ const app = Vue.createApp({
                 normalized_hamming_eq4 = 0
                 normalized_hamming_eq5 = 0
 
-                if(this.isCheckedMeanVariable){
-                    //console.log("Variable MEAN")
-                    //adjust size to avoid 100% coverage using available distance
-                    if(available_distance_eq1>0.1){
-                        available_distance_eq1 = available_distance_eq1 - step
-                    }
-                    if(available_distance_eq2>0.1){
-                        available_distance_eq2 = available_distance_eq2 - step
-                    }
-                    if(available_distance_eq3eq6>0.1){
-                        available_distance_eq3eq6 = available_distance_eq3eq6 - step
-
-                    }
-                    if(available_distance_eq4>0.1){
-                        available_distance_eq4 = available_distance_eq4 - step
-                    }
-
-                    maxHamming_eq1 = this.maxHammingVariableData['eq1'][String(eq1_val)]
-                    maxHamming_eq2 = this.maxHammingVariableData['eq2'][String(eq2_val)]
-                    maxHamming_eq3eq6 = this.maxHammingVariableData['eq3'][String(eq3_val)][String(eq6_val)]
-                    maxHamming_eq4 = this.maxHammingVariableData['eq4'][String(eq4_val)]
-                }
-                else{
-                    //here adjustment is not neeeded as the hamming distance already include the space
-                    //case 0.1 step, multiply by step because distance is pure
-                    maxHamming_eq1 = this.maxHammingData['eq1'][String(eq1_val)]*step
-                    maxHamming_eq2 = this.maxHammingData['eq2'][String(eq2_val)]*step
-                    maxHamming_eq3eq6 = this.maxHammingData['eq3'][String(eq3_val)][String(eq6_val)]*step
-                    maxHamming_eq4 = this.maxHammingData['eq4'][String(eq4_val)]*step
-                }
-
                 if (!isNaN(available_distance_eq1)){
                     n_existing_lower=n_existing_lower+1
-                    percent_to_next_eq1_hamming = (current_hamming_distance_eq1)/maxHamming_eq1
+                    percent_to_next_eq1_hamming = (current_hamming_distance_eq1)/(this.maxHammingData['eq1'][String(eq1_val)]*step)
                     //can be nan if divided by zero
                     if(isNaN(percent_to_next_eq1_hamming)){
                         percent_to_next_eq1_hamming=0
                     }
-                    //console.log("EQ1"+percent_to_next_eq1_hamming)
                     normalized_hamming_eq1 = available_distance_eq1*percent_to_next_eq1_hamming
-                    //console.log(available_distance_eq1)
-                    //console.log(normalized_hamming_eq1)
                 }
 
                 if (!isNaN(available_distance_eq2)){
                     n_existing_lower=n_existing_lower+1
-                    percent_to_next_eq2_hamming = (current_hamming_distance_eq2)/maxHamming_eq2
+                    percent_to_next_eq2_hamming = (current_hamming_distance_eq2)/(this.maxHammingData['eq2'][String(eq2_val)]*step)
                     if(isNaN(percent_to_next_eq2_hamming)){
                         percent_to_next_eq2_hamming=0
                     }
-                    //console.log("EQ2"+percent_to_next_eq2_hamming)
                     normalized_hamming_eq2 = available_distance_eq2*percent_to_next_eq2_hamming
                 }
 
                 if (!isNaN(available_distance_eq3eq6)){
                     n_existing_lower=n_existing_lower+1
-                    percent_to_next_eq3eq6_hamming = (current_hamming_distance_eq3eq6)/maxHamming_eq3eq6
+                    percent_to_next_eq3eq6_hamming = (current_hamming_distance_eq3eq6)/(this.maxHammingData['eq3'][String(eq3_val)][String(eq6_val)]*step)
                     if(isNaN(percent_to_next_eq3eq6_hamming)){
                         percent_to_next_eq3eq6_hamming=0
                     }
-                    //console.log("EQ3"+percent_to_next_eq3eq6_hamming)
                     normalized_hamming_eq3eq6 = available_distance_eq3eq6*percent_to_next_eq3eq6_hamming
                 }
 
                 if (!isNaN(available_distance_eq4)){
                     n_existing_lower=n_existing_lower+1
-                    percent_to_next_eq4_hamming = (current_hamming_distance_eq4)/maxHamming_eq4
+                    percent_to_next_eq4_hamming = (current_hamming_distance_eq4)/(this.maxHammingData['eq4'][String(eq4_val)]*step)
                     if(isNaN(percent_to_next_eq4_hamming)){
                         percent_to_next_eq4_hamming=0
                     }
-                    //console.log("EQ4"+percent_to_next_eq4_hamming)
                     normalized_hamming_eq4 = available_distance_eq4*percent_to_next_eq4_hamming
                 }
 
@@ -818,11 +608,8 @@ const app = Vue.createApp({
                     percent_to_next_eq5_hamming = 0
                     normalized_hamming_eq5 = available_distance_eq5*percent_to_next_eq5_hamming
                 }
-                //console.log("#############")
 
                 mean_distance = (normalized_hamming_eq1+normalized_hamming_eq2+normalized_hamming_eq3eq6+normalized_hamming_eq4+normalized_hamming_eq5)/n_existing_lower
-                //console.log(n_existing_lower)
-                //console.log(mean_distance)
                 value = parseFloat(value) - parseFloat(mean_distance)
                 
             }
@@ -871,22 +658,8 @@ const app = Vue.createApp({
             }
         },
     },
-    beforeMount() {
-        this.resetSelected()
-    },
-    mounted() {
-        this.setButtonsToVector(window.location.hash)
-        window.addEventListener("hashchange", () => {
-            this.setButtonsToVector(window.location.hash)
-        })
-
-        const resizeObserver = new ResizeObserver(() => {
-            //console.log("Size changed")
-            this.header_height = document.getElementById('header').clientHeight
-        })
-
-        resizeObserver.observe(document.getElementById('header'))
-    }
+ ....
+ }
 })
 
 app.mount("#app")
