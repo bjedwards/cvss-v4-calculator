@@ -1,6 +1,6 @@
 /**
  * Forked from https://github.com/RedHatProductSecurity/cvss-v4-calculator
- * @author Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento)
+ * Then reforked from Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento)
  */
 
 <!DOCTYPE html>
@@ -24,8 +24,9 @@
     <body>
         <div id="app" class="container">
             <div id="header">
-                <h4>CVSS v4.0 calculator – DRAFT</h4>
-                <h5> Look and feel from <A HREF="https://redhatproductsecurity.github.io/cvss-v4-calculator">Redhat</A>. Source code <A HREF="https://github.com/assuremoss/assuremoss.github.io/tree/main/CVSSv4Calculator">here</A> </h5>
+                <h4>CVSS v4.0 calculator – Draft for interpolation mode evaluation</h4>
+                <h5>Initial design due to <A HREF="https://redhatproductsecurity.github.io/cvss-v4-calculator">Redhat</A>.<br>First interpolation methods by Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento). <A HREF="https://github.com/assuremoss/assuremoss.github.io/tree/main/CVSSv4Calculator">Source</A><br>
+                Upwards and (soon middle out) interpolation code here: <A HREF="https://github.com/bjedwards/cvss-v4-calculator/tree/score_changes">Source</A> </h5>
                 Current Vector,Score:
                 <mark class="tooltip c-hand" data-tooltip="Click vector to copy to clipboard" @click="copyVectorCurrent">
                     {{ vector }},{{ baseScore }}
