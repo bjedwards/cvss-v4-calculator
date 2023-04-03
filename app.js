@@ -24,7 +24,7 @@ const app = Vue.createApp({
             isCheckedMeanVariable: false,
             isCheckedMaxValue: false,
             isCheckedMinimal: true,
-            isClickAdjustDownn: true,
+            isClickAdjustDown: true,
             isClickAdjustUp: false,
             cvssMaxVector: null,
             max_base_value: 0.0,
@@ -644,11 +644,11 @@ const app = Vue.createApp({
             }
 
             if (eq3==1 && eq6==1){
-                //multiple path take the one with higher score
+                //multiple path take the one with lower score
                 score_eq3eq6_next_higher_macro_left = this.cvssLookupData[eq3eq6_next_higher_macro_left]
                 score_eq3eq6_next_higher_macro_right = this.cvssLookupData[eq3eq6_next_higher_macro_right]
 
-                if (score_eq3eq6_next_higher_macro_left>score_eq3eq6_next_higher_macro_right){
+                if (score_eq3eq6_next_higher_macro_left < score_eq3eq6_next_higher_macro_right){
                     score_eq3eq6_next_higher_macro = score_eq3eq6_next_higher_macro_left
                 }
                 else{
@@ -663,8 +663,8 @@ const app = Vue.createApp({
             score_eq4_next_lower_macro = this.cvssLookupData[eq4_next_lower_macro]
             score_eq5_next_lower_macro = this.cvssLookupData[eq5_next_lower_macro]
 
-            score_eq4_higher_lower_macro = this.cvssLookupData[eq4_next_lower_macro]
-            score_eq5_higher_lower_macro = this.cvssLookupData[eq5_next_lower_macro]
+            score_eq4_next_higher_macro = this.cvssLookupData[eq4_next_higher_macro]
+            score_eq5_next_higher_macro = this.cvssLookupData[eq5_next_higher_macro]
 
             //get all max vector for the eq
             eq1_maxes = this.getvalueEqLookup(lookup,0)
@@ -746,28 +746,47 @@ const app = Vue.createApp({
                     break
                 }
             }
-            //console.log(max_vector)
 
             //if the next lower macro score do not exist the result is Nan
-            if (this.isCheckedAdjustDown) {
+            if (this.isClickAdjustDown) {
                 available_distance_eq1 = value - score_eq1_next_lower_macro
                 available_distance_eq2 = value - score_eq2_next_lower_macro
                 available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
                 available_distance_eq4 = value - score_eq4_next_lower_macro
                 available_distance_eq5 = value - score_eq5_next_lower_macro
             } else {
-                available_distance_eq1 = value - score_eq1_next_higher
-                available_distance_eq2 = value - score_eq2_next_higher_macro
-                available_distance_eq3eq6 = value - score_eq3eq6_next_higher_macro
-                available_distance_eq4 = value - score_eq4_next_higher_macro
-                available_distance_eq5 = value - score_eq5_next_higher_macro
+                available_distance_eq1 = score_eq1_next_higher_macro - value;
+                available_distance_eq2 = score_eq2_next_higher_macro - value;
+                available_distance_eq3eq6 = score_eq3eq6_next_higher_macro - value;
+                available_distance_eq4 = score_eq4_next_higher_macro - value;
+                available_distance_eq5 =  score_eq5_next_higher_macro - value;
             }
 
             current_hamming_distance_eq1 = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI
             current_hamming_distance_eq2 = hamming_distance_AC + hamming_distance_AT
             current_hamming_distance_eq3eq6 = hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
             current_hamming_distance_eq4 = hamming_distance_SC + hamming_distance_SI + hamming_distance_SA
+            if((this.isCheckedWeighted || this.isCheckedMeanVariable) && !(this.isCheckedMean) && !(this.isCheckedMinimal)){
+                maxHamming_eq1 = this.maxHammingVariableData['eq1'][String(eq1_val)]
+                maxHamming_eq2 = this.maxHammingVariableData['eq2'][String(eq2_val)]
+                maxHamming_eq3eq6 = this.maxHammingVariableData['eq3'][String(eq3_val)][String(eq6_val)]
+                maxHamming_eq4 = this.maxHammingVariableData['eq4'][String(eq4_val)]
+            } else {
+                maxHamming_eq1 = this.maxHammingData['eq1'][String(eq1_val)]*0.1
+                maxHamming_eq2 = this.maxHammingData['eq2'][String(eq2_val)]*0.1
+                maxHamming_eq3eq6 = this.maxHammingData['eq3'][String(eq3_val)][String(eq6_val)]*0.1
+                maxHamming_eq4 = this.maxHammingData['eq4'][String(eq4_val)]*0.1
+            }
 
+            
+            if (this.isClickAdjustUp) {                
+                current_hamming_distance_eq1 = maxHamming_eq1 - current_hamming_distance_eq1
+                current_hamming_distance_eq2 = maxHamming_eq2 - current_hamming_distance_eq2
+                current_hamming_distance_eq3eq6 = maxHamming_eq3eq6 - current_hamming_distance_eq3eq6 
+                current_hamming_distance_eq4 = maxHamming_eq4 - current_hamming_distance_eq4
+            }
+            
+            
             if(!this.isCheckedMean && !this.isCheckedMeanVariable){
                 //setting capped to macrovector
                 if(this.isCheckedCappedMacro){
@@ -809,9 +828,14 @@ const app = Vue.createApp({
                 }
                 else{
                     //not capped to macrovector, hamming distance is not constrained
-                    sum_hamming_distance = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI + hamming_distance_AC + hamming_distance_AT + hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_SC + hamming_distance_SI + hamming_distance_SA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
+                    //sum_hamming_distance = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI + hamming_distance_AC + hamming_distance_AT + hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_SC + hamming_distance_SI + hamming_distance_SA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
+                    sum_hamming_distance = current_hamming_distance_eq1 + current_hamming_distance_eq2 + current_hamming_distance_eq3eq6 + current_hamming_distance_eq4;
                 }
-                value = parseFloat(value) - parseFloat(sum_hamming_distance)
+                if (this.isClickAdjustDown) {
+                    value = parseFloat(value) - parseFloat(sum_hamming_distance)
+                } else {
+                    value = parseFloat(value) + parseFloat(sum_hamming_distance)
+                }
             }
             else{
                 //console.log("MEAN SECTION")
@@ -865,6 +889,9 @@ const app = Vue.createApp({
                     if(isNaN(percent_to_next_eq1_hamming)){
                         percent_to_next_eq1_hamming=0
                     }
+                    //if (this.isClickAdjustUp) {
+                    //    percent_to_next_eq1_hamming = 1- percent_to_next_eq1_hamming;
+                    //}
                     //console.log("EQ1"+percent_to_next_eq1_hamming)
                     normalized_hamming_eq1 = available_distance_eq1*percent_to_next_eq1_hamming
                     //console.log(available_distance_eq1)
@@ -877,6 +904,9 @@ const app = Vue.createApp({
                     if(isNaN(percent_to_next_eq2_hamming)){
                         percent_to_next_eq2_hamming=0
                     }
+                    //if (this.isClickAdjustUp) {
+                    //    percent_to_next_eq2_hamming = 1- percent_to_next_eq2_hamming;
+                    //}
                     //console.log("EQ2"+percent_to_next_eq2_hamming)
                     normalized_hamming_eq2 = available_distance_eq2*percent_to_next_eq2_hamming
                 }
@@ -887,6 +917,9 @@ const app = Vue.createApp({
                     if(isNaN(percent_to_next_eq3eq6_hamming)){
                         percent_to_next_eq3eq6_hamming=0
                     }
+                    //if (this.isClickAdjustUp) {
+                    //    percent_to_next_eq3eq6_hamming = 1- percent_to_next_eq3eq6_hamming;
+                    //}
                     //console.log("EQ3"+percent_to_next_eq3eq6_hamming)
                     normalized_hamming_eq3eq6 = available_distance_eq3eq6*percent_to_next_eq3eq6_hamming
                 }
@@ -897,6 +930,9 @@ const app = Vue.createApp({
                     if(isNaN(percent_to_next_eq4_hamming)){
                         percent_to_next_eq4_hamming=0
                     }
+                    //if (this.isClickAdjustUp) {
+                    //    percent_to_next_eq4_hamming = 1- percent_to_next_eq4_hamming;
+                    //}
                     //console.log("EQ4"+percent_to_next_eq4_hamming)
                     normalized_hamming_eq4 = available_distance_eq4*percent_to_next_eq4_hamming
                 }
@@ -905,6 +941,12 @@ const app = Vue.createApp({
                     //for eq5 is always 0 the percentage
                     n_existing_lower=n_existing_lower+1
                     percent_to_next_eq5_hamming = 0
+                    if(isNaN(percent_to_next_eq5_hamming)){
+                        percent_to_next_eq5_hamming=0
+                    }
+                    //if (this.isClickAdjustUp) {
+                    //    percent_to_next_eq5_hamming = 1- percent_to_next_eq5_hamming;
+                    //}
                     normalized_hamming_eq5 = available_distance_eq5*percent_to_next_eq5_hamming
                 }
                 //console.log("#############")
@@ -912,12 +954,21 @@ const app = Vue.createApp({
                 mean_distance = (normalized_hamming_eq1+normalized_hamming_eq2+normalized_hamming_eq3eq6+normalized_hamming_eq4+normalized_hamming_eq5)/n_existing_lower
                 //console.log(n_existing_lower)
                 //console.log(mean_distance)
-                value = parseFloat(value) - parseFloat(mean_distance)
+                if (this.isClickAdjustDown) {
+                    value = parseFloat(value) - parseFloat(mean_distance);
+                } else {
+                    value = parseFloat(value) + parseFloat(mean_distance);
+
+                }
                 
             }
                         
             if(value<0){
                 value = 0.0
+            }
+
+            if(value>10){
+                value = 10.0
             }
 
             if(this.isCheckedCappedQualitative){
