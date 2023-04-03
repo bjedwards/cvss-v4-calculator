@@ -24,8 +24,9 @@ const app = Vue.createApp({
             isCheckedMeanVariable: false,
             isCheckedMaxValue: false,
             isCheckedMinimal: true,
-            isClickAdjustDown: true,
-            isClickAdjustUp: false,
+            isClickAdjustDown: false,
+            isClickAdjustMiddle: false,
+            isClickAdjustUp: true,
             cvssMaxVector: null,
             max_base_value: 0.0,
             current_value: 0.0
@@ -272,25 +273,45 @@ const app = Vue.createApp({
 
             }
         },
-        onClickAdjustDown() {
-            this.isClickAdjustDown = document.getElementById('adjust_down').checked
-            if (this.isClickAdjustDown){
-                document.getElementById('adjust_up').checked = false;
-                this.isClickAdjustUp = false;
-            } else {
-                document.getElementById('adjust_up').checked = true;
-                this.isClickAdjustUp = true;
-            }
-        },
+        // These should be radio buttons and I probably woulda saved myself some time...
         onClickAdjustUp() {
-            this.isClickAdjustUp = document.getElementById('adjust_up').checked
-            if (this.isClickAdjustUp){
-                document.getElementById('adjust_down').checked = false;
-                this.isClickAdjustDown = false;
-            } else {
-                document.getElementById('adjust_down').checked = true;
-                this.isClickAdjustDown = true;
+            if (this.isClickAdjustUp) {
+                // If we're already set, just force the checkmark
+                document.getElementById('adjust_up').checked = true;
             }
+           // otherwise change mode
+           this.isClickAdjustUp = true;
+           this.isClickAdjustMiddle = false;
+           this.isClickAdjustDown = false;
+           document.getElementById('adjust_up').checked = true;
+           document.getElementById('adjust_middle').checked = false;
+           document.getElementById('adjust_down').checked = false;
+        },
+        onClickAdjustMiddle() {
+            if (this.isClickAdjustMiddle) {
+                // If we're already set, just force the checkmark
+                document.getElementById('adjust_middle').checked = true;
+            }
+           // otherwise change mode
+           this.isClickAdjustUp = false;
+           this.isClickAdjustMiddle = true;
+           this.isClickAdjustDown = false;
+           document.getElementById('adjust_up').checked = false;
+           document.getElementById('adjust_middle').checked = true;
+           document.getElementById('adjust_down').checked = false;
+        },
+        onClickAdjustDown() {
+            if (this.isClickAdjustDown) {
+                // If we're already set, just force the checkmark
+                document.getElementById('adjust_down').checked = true;
+            }
+            // otherwise change mode
+            this.isClickAdjustUp = false;
+            this.isClickAdjustMiddle = false;
+            this.isClickAdjustDown = true;
+            document.getElementById('adjust_up').checked = false;
+            document.getElementById('adjust_middle').checked = false;
+            document.getElementById('adjust_down').checked = true;
         },
         onClickCappedQualitative() {
             this.isCheckedCappedQualitative = document.getElementById('capped_qual_checkbox').checked
@@ -747,25 +768,12 @@ const app = Vue.createApp({
                 }
             }
 
-            //if the next lower macro score do not exist the result is Nan
-            if (this.isClickAdjustDown) {
-                available_distance_eq1 = value - score_eq1_next_lower_macro
-                available_distance_eq2 = value - score_eq2_next_lower_macro
-                available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
-                available_distance_eq4 = value - score_eq4_next_lower_macro
-                available_distance_eq5 = value - score_eq5_next_lower_macro
-            } else {
-                available_distance_eq1 = score_eq1_next_higher_macro - value;
-                available_distance_eq2 = score_eq2_next_higher_macro - value;
-                available_distance_eq3eq6 = score_eq3eq6_next_higher_macro - value;
-                available_distance_eq4 = score_eq4_next_higher_macro - value;
-                available_distance_eq5 =  score_eq5_next_higher_macro - value;
-            }
-
             current_hamming_distance_eq1 = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI
             current_hamming_distance_eq2 = hamming_distance_AC + hamming_distance_AT
             current_hamming_distance_eq3eq6 = hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
             current_hamming_distance_eq4 = hamming_distance_SC + hamming_distance_SI + hamming_distance_SA
+            current_hamming_distance_eq5 = 0
+            
             if((this.isCheckedWeighted || this.isCheckedMeanVariable) && !(this.isCheckedMean) && !(this.isCheckedMinimal)){
                 maxHamming_eq1 = this.maxHammingVariableData['eq1'][String(eq1_val)]
                 maxHamming_eq2 = this.maxHammingVariableData['eq2'][String(eq2_val)]
@@ -778,12 +786,55 @@ const app = Vue.createApp({
                 maxHamming_eq4 = this.maxHammingData['eq4'][String(eq4_val)]*0.1
             }
 
+            //if the next lower macro score do not exist the result is Nan
+            if (this.isClickAdjustDown) {
+                available_distance_eq1 = value - score_eq1_next_lower_macro
+                available_distance_eq2 = value - score_eq2_next_lower_macro
+                available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
+                available_distance_eq4 = value - score_eq4_next_lower_macro
+                available_distance_eq5 = value - score_eq5_next_lower_macro
+            } else if (this.isClickAdjustUp) {
+                available_distance_eq1 = score_eq1_next_higher_macro - value;
+                available_distance_eq2 = score_eq2_next_higher_macro - value;
+                available_distance_eq3eq6 = score_eq3eq6_next_higher_macro - value;
+                available_distance_eq4 = score_eq4_next_higher_macro - value;
+                available_distance_eq5 =  score_eq5_next_higher_macro - value;
+            } else {
+                //Down further than halfway, so increase
+                if (current_hamming_distance_eq1 > maxHamming_eq1/2){
+                    available_distance_eq1 = (value - score_eq1_next_lower_macro)/2;
+                } else { 
+                    available_distance_eq1 = (score_eq1_next_higher_macro - value)/2;
+                }
+
+                if (current_hamming_distance_eq2 > maxHamming_eq2/2){
+                    available_distance_eq2 = (value - score_eq2_next_lower_macro)/2;
+                } else {
+                    available_distance_eq2 = (score_eq2_next_higher_macro - value)/2;
+                }
+                if (current_hamming_distance_eq3eq6 > maxHamming_eq3eq6/2){
+                    available_distance_eq3eq6 = (value - score_eq3eq6_next_lower_macro)/2;
+                } else {
+                    available_distance_eq3eq6 = (score_eq3eq6_next_higher_macro - value)/2;
+                }
+                if (current_hamming_distance_eq4 > maxHamming_eq4/2){
+                    available_distance_eq4 = (value - score_eq4_next_lower_macro)/2;
+                } else {
+                    available_distance_eq4 = (score_eq4_next_higher_macro - value)/2;
+                }
+            }
+
             
             if (this.isClickAdjustUp) {                
-                current_hamming_distance_eq1 = maxHamming_eq1 - current_hamming_distance_eq1
-                current_hamming_distance_eq2 = maxHamming_eq2 - current_hamming_distance_eq2
-                current_hamming_distance_eq3eq6 = maxHamming_eq3eq6 - current_hamming_distance_eq3eq6 
-                current_hamming_distance_eq4 = maxHamming_eq4 - current_hamming_distance_eq4
+                current_hamming_distance_eq1 =  current_hamming_distance_eq1 - maxHamming_eq1 
+                current_hamming_distance_eq2 =  current_hamming_distance_eq2 - maxHamming_eq2
+                current_hamming_distance_eq3eq6 = current_hamming_distance_eq3eq6 - maxHamming_eq3eq6 
+                current_hamming_distance_eq4 =  current_hamming_distance_eq4 - maxHamming_eq4
+            } else if(this.isClickAdjustMiddle) {
+                current_hamming_distance_eq1 =  current_hamming_distance_eq1 - maxHamming_eq1/2 
+                current_hamming_distance_eq2 =  current_hamming_distance_eq2 - maxHamming_eq2/2
+                current_hamming_distance_eq3eq6 = current_hamming_distance_eq3eq6 - maxHamming_eq3eq6/2
+                current_hamming_distance_eq4 =  current_hamming_distance_eq4 - maxHamming_eq4/2
             }
             
             
@@ -795,34 +846,34 @@ const app = Vue.createApp({
                     //consider each eq and its lower macro
                     //no need for EQ5 as hamming is always 0
 
-                    if(current_hamming_distance_eq1>available_distance_eq1){
+                    if(Math.abs(current_hamming_distance_eq1)>available_distance_eq1){
                         //cap to max changes
-                        sum_hamming_distance+=available_distance_eq1
+                        sum_hamming_distance+=available_distance_eq1*Math.sign(current_hamming_distance_eq1);
                     }
                     else{
                         //we fall here if either max_change is NaN or because space is enough
                         sum_hamming_distance+=current_hamming_distance_eq1
                     }
 
-                    if(current_hamming_distance_eq2>available_distance_eq2){
-                        sum_hamming_distance+=available_distance_eq2
+                    if(Math.abs(current_hamming_distance_eq2)>available_distance_eq2){
+                        sum_hamming_distance+=available_distance_eq2*Math.sign(current_hamming_distance_eq2)
                     }
                     else{
                         sum_hamming_distance+=current_hamming_distance_eq2
                     }
 
-                    if(current_hamming_distance_eq3eq6>available_distance_eq3eq6){
-                        sum_hamming_distance+=available_distance_eq3eq6
+                    if(Math.abs(current_hamming_distance_eq3eq6)>available_distance_eq3eq6){
+                        sum_hamming_distance+=available_distance_eq3eq6*Math.sign(current_hamming_distance_eq3eq6)
                     }
                     else{
                         sum_hamming_distance+=current_hamming_distance_eq3eq6
                     }
 
-                    if(current_hamming_distance_eq4>available_distance_eq4){
+                    if(Math.abs(current_hamming_distance_eq4)>available_distance_eq4){
                         sum_hamming_distance+=available_distance_eq4
                     }
                     else{
-                        sum_hamming_distance+=current_hamming_distance_eq4
+                        sum_hamming_distance+=current_hamming_distance_eq4*Math.sign(current_hamming_distance_eq4)
                     }
 
                 }
@@ -831,11 +882,7 @@ const app = Vue.createApp({
                     //sum_hamming_distance = hamming_distance_AV + hamming_distance_PR + hamming_distance_UI + hamming_distance_AC + hamming_distance_AT + hamming_distance_VC + hamming_distance_VI + hamming_distance_VA + hamming_distance_SC + hamming_distance_SI + hamming_distance_SA + hamming_distance_CR + hamming_distance_IR + hamming_distance_AR
                     sum_hamming_distance = current_hamming_distance_eq1 + current_hamming_distance_eq2 + current_hamming_distance_eq3eq6 + current_hamming_distance_eq4;
                 }
-                if (this.isClickAdjustDown) {
-                    value = parseFloat(value) - parseFloat(sum_hamming_distance)
-                } else {
-                    value = parseFloat(value) + parseFloat(sum_hamming_distance)
-                }
+                value = parseFloat(value) - parseFloat(sum_hamming_distance)
             }
             else{
                 //console.log("MEAN SECTION")
@@ -880,6 +927,13 @@ const app = Vue.createApp({
                     maxHamming_eq2 = this.maxHammingData['eq2'][String(eq2_val)]*step
                     maxHamming_eq3eq6 = this.maxHammingData['eq3'][String(eq3_val)][String(eq6_val)]*step
                     maxHamming_eq4 = this.maxHammingData['eq4'][String(eq4_val)]*step
+                }
+
+                if (this.isClickAdjustMiddle) {
+                    maxHamming_eq1 = maxHamming_eq1/2
+                    maxHamming_eq2 = maxHamming_eq2/2
+                    maxHamming_eq3eq6 = maxHamming_eq3eq6/2
+                    maxHamming_eq4 = maxHamming_eq4/2
                 }
 
                 if (!isNaN(available_distance_eq1)){
@@ -950,17 +1004,15 @@ const app = Vue.createApp({
                     normalized_hamming_eq5 = available_distance_eq5*percent_to_next_eq5_hamming
                 }
                 //console.log("#############")
-
-                mean_distance = (normalized_hamming_eq1+normalized_hamming_eq2+normalized_hamming_eq3eq6+normalized_hamming_eq4+normalized_hamming_eq5)/n_existing_lower
+                if (n_existing_lower==0) {
+                    mean_distance = 0
+                } else { //sometimes we need to go up but there is nothing there, or down but there is nothing there so it's a change of 0.
+                    mean_distance = (normalized_hamming_eq1+normalized_hamming_eq2+normalized_hamming_eq3eq6+normalized_hamming_eq4+normalized_hamming_eq5)/n_existing_lower
+                }
                 //console.log(n_existing_lower)
                 //console.log(mean_distance)
-                if (this.isClickAdjustDown) {
-                    value = parseFloat(value) - parseFloat(mean_distance);
-                } else {
-                    value = parseFloat(value) + parseFloat(mean_distance);
+                value = parseFloat(value) - parseFloat(mean_distance);
 
-                }
-                
             }
                         
             if(value<0){

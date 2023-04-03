@@ -25,7 +25,7 @@
         <div id="app" class="container">
             <div id="header">
                 <h4>CVSS v4.0 calculator – Draft for interpolation mode evaluation</h4>
-                <h5>Initial design due to <A HREF="https://redhatproductsecurity.github.io/cvss-v4-calculator">Redhat</A>.<br>First interpolation methods by Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento). <A HREF="https://github.com/assuremoss/assuremoss.github.io/tree/main/CVSSv4Calculator">Source</A><br>
+                <h5>Initial implmentation due to <A HREF="https://redhatproductsecurity.github.io/cvss-v4-calculator">Redhat</A>.<br>First interpolation methods by Fabio Massacci (University of Trento and Vrije Universiteit Amsterdam) and Giorgio Di Tizio (University of Trento). <A HREF="https://github.com/assuremoss/assuremoss.github.io/tree/main/CVSSv4Calculator">Source</A><br>
                 Upwards and (soon middle out) interpolation code here: <A HREF="https://github.com/bjedwards/cvss-v4-calculator/tree/score_changes">Source</A> </h5>
                 Current Vector,Score:
                 <mark class="tooltip c-hand" data-tooltip="Click vector to copy to clipboard" @click="copyVectorCurrent">
@@ -52,9 +52,10 @@
                     Adjust the macrovectors up or down.
                 </h5>
                 <h6>
-                    Macrovectors can be adjusted from the minimal vector upwards (increasing the score) or down from the maximal vector within an equivalence class value</h6>
-                     <input type = "checkbox" id="adjust_down" @click="onClickAdjustDown()" checked=true> Down<br>
-                     <input type = "checkbox" id="adjust_up" @click="onClickAdjustUp()"> Up<br>
+                    Macrovectors can be adjusted from the minimal vector upwards (increasing the score) or down from the maximal vector within an equivalence class value. As an alternative they can also be adjusted from the middle out.</h6>
+                     <input type = "checkbox" id="adjust_up" @click="onClickAdjustUp()" checked=true>Up<br>
+                     <input type = "checkbox" id="adjust_middle" @click="onClickAdjustMiddle()">Middle<br>
+                     <input type = "checkbox" id="adjust_down" @click="onClickAdjustDown()" >Down<br>
                      
                 <h5>
                The scores above are "free" to change and to go beyond the lower levels. If you want them capped tick your preferred option.
