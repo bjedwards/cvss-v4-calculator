@@ -309,7 +309,9 @@ const app = Vue.createApp({
             if (["VC", "VI", "VA", "SC", "SI", "SA"].every((metric) => this.m(metric) == "N")) {
                 return 0.0
             }
+            console.log(["Macrovector: ", this.macroVector])
             value = this.lookup[macroVector]
+            console.log(["base_score", value]);
 
             // 1. For each of the EQs:
             //   a. The maximal scoring difference is determined as the difference
@@ -355,6 +357,15 @@ const app = Vue.createApp({
             eq4_next_lower_macro = "".concat(eq1_val, eq2_val, eq3_val, eq4_val + 1, eq5_val, eq6_val)
             eq5_next_lower_macro = "".concat(eq1_val, eq2_val, eq3_val, eq4_val, eq5_val + 1, eq6_val)
 
+            console.log([
+                "Next Lowers",
+                eq1_next_lower_macro,
+                eq2_next_lower_macro,
+                eq3eq6_next_lower_macro,
+                eq4_next_lower_macro,
+                eq5_next_lower_macro
+            ])
+
 
             // get their score, if the next lower macro score do not exist the result is NaN
             score_eq1_next_lower_macro = this.lookup[eq1_next_lower_macro]
@@ -379,6 +390,15 @@ const app = Vue.createApp({
 
             score_eq4_next_lower_macro = this.lookup[eq4_next_lower_macro]
             score_eq5_next_lower_macro = this.lookup[eq5_next_lower_macro]
+
+            console.log([
+                "Next lower scores",
+                score_eq1_next_lower_macro,
+                score_eq2_next_lower_macro,
+                score_eq3eq6_next_lower_macro,
+                score_eq4_next_lower_macro,
+                score_eq5_next_lower_macro
+            ])
 
             //   b. The severity distance of the to-be scored vector from a
             //      highest severity vector in the same MacroVector is determined.
@@ -440,6 +460,15 @@ const app = Vue.createApp({
             current_severity_distance_eq4 = severity_distance_SC + severity_distance_SI + severity_distance_SA
             current_severity_distance_eq5 = 0
 
+            console.log([
+                "eq_severity_distance",
+                current_severity_distance_eq3eq6,
+                current_severity_distance_eq1,
+                current_severity_distance_eq2,
+                current_severity_distance_eq4,
+                current_severity_distance_eq5
+            ])
+
             step = 0.1
 
             // if the next lower macro score do not exist the result is Nan
@@ -449,6 +478,15 @@ const app = Vue.createApp({
             available_distance_eq3eq6 = value - score_eq3eq6_next_lower_macro
             available_distance_eq4 = value - score_eq4_next_lower_macro
             available_distance_eq5 = value - score_eq5_next_lower_macro
+
+            console.log([
+                "Available Distance",
+                available_distance_eq1,
+                available_distance_eq2,
+                available_distance_eq3eq6,
+                available_distance_eq4,
+                available_distance_eq5
+            ])
 
             percent_to_next_eq1_severity = 0
             percent_to_next_eq2_severity = 0
@@ -506,6 +544,24 @@ const app = Vue.createApp({
                 percent_to_next_eq5_severity = 0
                 normalized_severity_eq5 = available_distance_eq5 * percent_to_next_eq5_severity
             }
+
+            console.log([
+                "Perc_eq_distance",
+                percent_to_next_eq3eq6_severity,
+                percent_to_next_eq1_severity,
+                percent_to_next_eq2_severity,
+                percent_to_next_eq4_severity,
+                percent_to_next_eq5_severity
+            ])
+
+            console.log([
+                "Adjustments",
+                normalized_severity_eq3eq6,
+                normalized_severity_eq1,
+                normalized_severity_eq2,
+                normalized_severity_eq4,
+                normalized_severity_eq5
+            ])
 
             // 2. The mean of the above computed proportional distances is computed.
             if (n_existing_lower == 0) {
